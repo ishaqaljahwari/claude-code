@@ -80,11 +80,12 @@ function drawHero(J,t,o={}){const s=J.s,f=J.f;const C={robe:'#f6f3ec',shade:'#cf
   // head + massar turban
   const h=J.head,r=15*s;x.fillStyle=C.skin;x.strokeStyle=C.line;x.lineWidth=lw*0.8;x.beginPath();x.arc(h[0],h[1],r,0,7);x.fill();x.stroke();
   x.fillStyle='#2a1a12';x.beginPath();x.arc(h[0]+f*4*s,h[1]+6*s,r*0.85,0.15*Math.PI,0.85*Math.PI);x.fill(); // beard
+  {const tk=o.talk??(o.alpha==null?talk('hero',CURT):0);x.fillStyle='#4a0f12';x.strokeStyle=C.line;x.lineWidth=1.2*s;x.beginPath();x.ellipse(h[0]+f*8.5*s,h[1]+7.5*s,3.6*s,0.5*s+tk*3.4*s,0,0,7);x.fill();x.stroke();if(tk>0.3){x.fillStyle='#fff';x.fillRect(h[0]+f*8.5*s-2.6*s,h[1]+7.5*s-tk*3*s,5.2*s,1.1*s)}}
   x.save();x.translate(h[0],h[1]);x.rotate(J.P.torso*f*0.5);x.fillStyle='#8c1c2c';x.beginPath();x.ellipse(0,-6*s,r*1.12,r*0.78,0,Math.PI,0);x.lineTo(r*1.12,-2*s);x.lineTo(-r*1.12,-2*s);x.fill();x.stroke();
   x.strokeStyle='#f2c14e';x.lineWidth=1.6*s;for(let i=0;i<3;i++){x.beginPath();x.ellipse(0,-6*s+i*3*s,r*1.05,r*0.6-i*2*s,0,Math.PI*1.05,-0.05*Math.PI);x.stroke()}
   x.fillStyle='#8c1c2c';x.beginPath();x.moveTo(-f*r,-6*s);x.quadraticCurveTo(-f*(r+10*s),2*s+Math.sin(t*9)*3*s,-f*(r+6*s),12*s);x.lineTo(-f*(r-3*s),-2*s);x.fill();x.restore();
   // eye
-  x.save();if(o.glow){x.shadowColor='#ffd76a';x.shadowBlur=24*s;x.fillStyle='#fff2b0'}else x.fillStyle=C.line;x.beginPath();x.ellipse(h[0]+f*8*s,h[1]-1*s,3.4*s,1.6*s,0,0,7);x.fill();x.restore();
+  x.save();if(o.glow){x.shadowColor='#ffd76a';x.shadowBlur=24*s;x.fillStyle='#fff2b0'}else x.fillStyle=C.line;x.beginPath();x.ellipse(h[0]+f*8*s,h[1]-1*s,2.6*s,1.4*s,0,0,7);x.fill();x.restore();
   // sword (straight Omani saif)
   const bb=J.rHa,tip=J.tip,d=J.swDir,pn=[-d[1],d[0]];
   x.save();if(o.glow){x.shadowColor='#ffcf5a';x.shadowBlur=50*s}
@@ -104,6 +105,7 @@ function drawShadow(J,t,o={}){const s=J.s,f=J.f;const lw=4*s;x.save();x.lineJoin
   // hooded head
   const h=J.head,R=16*s;x.beginPath();x.moveTo(h[0]-f*R,h[1]+R);x.quadraticCurveTo(h[0]-f*R*1.2,h[1]-R*1.6,h[0]+f*R*0.6,h[1]-R*1.4);x.quadraticCurveTo(h[0]+f*R*1.3,h[1]-R*0.2,h[0]+f*R*0.9,h[1]+R);x.closePath();x.fill();x.stroke();
   if(o.horns){x.beginPath();x.moveTo(h[0]-f*R*0.2,h[1]-R*1.2);x.quadraticCurveTo(h[0]-f*R*1.5,h[1]-R*3,h[0]-f*R*2.4,h[1]-R*2.6);x.quadraticCurveTo(h[0]-f*R*1.2,h[1]-R*2.2,h[0]+f*R*0.3,h[1]-R*1.3);x.fill();x.stroke()}
+  {const tk=o.talk??talk(o.horns?'boss':'minion',CURT);if(tk>0.02){x.shadowColor='#ff2030';x.shadowBlur=25*s;x.fillStyle='#ff5a3a';x.beginPath();x.ellipse(h[0]+f*R*0.6,h[1]+R*0.5,5.5*s,0.6*s+tk*4.5*s,0,0,7);x.fill()}}
   x.shadowColor='#ff2030';x.shadowBlur=20*s;x.fillStyle='#ff3b3b';for(const dx of[0.35,0.75]){x.beginPath();x.ellipse(h[0]+f*R*dx,h[1]-R*0.05,3.2*s,1.8*s,f*0.2,0,7);x.fill()}
   // curved blade
   const bb=J.rHa,d=J.swDir,pn=[-d[1],d[0]],Lb=LEN.sw*s*(J.P.swl||1);x.shadowColor='#ff2040';x.shadowBlur=18*s;x.fillStyle='#1a0d24';x.strokeStyle='#ff3355';x.lineWidth=2.5*s;
@@ -133,7 +135,7 @@ function aura(J,t,k){x.save();x.globalCompositeOperation='lighter';const c=[J.hi
 const SHAKES=[[10.1,26],[11.0,26],[12.45,48],[13.2,14],[13.4,14],[13.6,14],[13.8,14],[14.0,30],[17.7,40],[19.0,55],[24.0,14],[24.6,20],[26.1,70],[26.6,60]];
 function shakeAt(t){let sx=0,sy=0;for(const[a,amp]of SHAKES){const d=t-a;if(d>=0&&d<0.6){const k=amp*Math.exp(-d*8);sx+=Math.sin(d*90+a)*k;sy+=Math.cos(d*77+a*3)*k}}if(t>17.1&&t<18.4){const k=10;sx+=Math.sin(t*70)*k;sy+=Math.cos(t*63)*k}return[sx,sy]}
 const INVERT=[[10.1,10.17],[11.0,11.07],[12.45,12.55],[19.0,19.1],[26.1,26.14],[26.2,26.24]];
-function postFX(t){for(const[a,b]of INVERT)if(t>=a&&t<b){x.save();x.globalCompositeOperation='saturation';x.fillStyle='#808080';x.fillRect(0,0,W,H);x.globalCompositeOperation='difference';x.fillStyle='#fff';x.fillRect(0,0,W,H);x.restore();
+function postFX(t){dialogue(t);for(const[a,b]of INVERT)if(t>=a&&t<b){x.save();x.globalCompositeOperation='saturation';x.fillStyle='#808080';x.fillRect(0,0,W,H);x.globalCompositeOperation='difference';x.fillStyle='#fff';x.fillRect(0,0,W,H);x.restore();
   x.save();x.globalCompositeOperation='multiply';x.fillStyle='rgba(255,120,120,1)';x.globalAlpha=0.25;x.fillRect(0,0,W,H);x.restore()}}
 
 // ---------- world background for fights ----------
@@ -166,7 +168,7 @@ function sDark(t){scene1(t,false);
   for(let i=0;i<16;i++){const fx=(i*97+t*(20+i*3))%(W+400)-200,fy=H-80-((t*60+i*30)%200)-seg(t,0,4.5)*400;x.fillStyle=rgrad(fx,fy,260,[[0,'rgba(10,0,18,0.75)'],[1,'rgba(10,0,18,0)']]);x.fillRect(fx-260,fy-260,520,520)}
   x.fillStyle=vgrad(H-900,H,[[0,'rgba(5,0,10,0)'],[1,`rgba(5,0,10,${0.9*seg(t,0,3)})`]]);x.fillRect(0,H-900,W,900);
   for(const[ex,ey,et,sz]of EYES){const v=seg(t,et,et+0.3);if(v<=0)continue;const blink=Math.abs(Math.sin(t*2.3+ex))>0.06?1:0.1;x.save();x.globalCompositeOperation='lighter';x.shadowColor='#ff1020';x.shadowBlur=30;x.fillStyle=`rgba(255,40,40,${v})`;for(const d of[-1,1]){x.beginPath();x.ellipse(ex+d*16*sz,ey,8*sz,3.5*sz*blink,d*-0.25,0,7);x.fill()}x.restore()}
-  title('حين يزحفُ الظلام…',820,104,'Amiri',1.2,t,{out:3.9,colors:[[0,'#ffffff'],[0.5,'#ffc2c2'],[1,'#ff6a6a']],glow:'rgba(255,40,60,0.9)'});
+
 }
 
 // ---------- SCENE: guardian on the fort (4.5 – 9) ----------
@@ -201,7 +203,7 @@ function sHero(t){const p=seg(t,4.5,9);
   embers(t,0.6);
   // eye cut-in
   const ec=seg(t,5.6,5.8),eo=1-seg(t,6.9,7.05);if(ec>0&&eo>0){x.save();x.globalAlpha=Math.min(ec,eo);x.translate((1-eOut(ec))*-W,0);animeEye(t,880,lerp(0.15,1,eOut(seg(t,5.9,6.2))));x.restore()}
-  title('يقفُ حارسُ عُمان',380,118,'Kufi',7.7,t,{out:8.7});
+
 }
 
 // ---------- SCENE: battle (9 – 17) ----------
@@ -240,7 +242,7 @@ function sBattle(t){const cam=camB(t);battleBG(t,cam);
   const bw=seg(t,9.6,10.2);if(bw>0&&bw<1)speedLines(W/2,H*0.55,t,0.25*Math.sin(bw*Math.PI));
   if(t>12.9&&t<14.1)speedLines(W/2,H*0.55,t,0.2,'#ffd0d0',120);
   if(t>14.2){x.fillStyle=`rgba(0,0,0,${0.25*seg(t,14.2,15)})`;x.fillRect(0,0,W,H)}
-  title('سيفُ الحقِّ لا ينكسر',360,108,'Kufi',14.7,t,{out:16.6});
+
 }
 
 // ---------- SCENE: the shadow titan (17 – 23) ----------
@@ -272,7 +274,7 @@ function sBoss(t){const cam=camBoss(t);battleBG(t,cam,1.4);
   const pin=eOut(seg(t,19.08,19.3)),pout=seg(t,20.35,20.5);if(pin>0&&pout<1){const off=(1-pin)*W*1.2+pout*W*1.2;
     const drawPanel=(pts,fn,dx)=>{x.save();x.translate(dx,0);poly(pts);x.save();x.clip();fn(t);x.restore();poly(pts);x.lineWidth=16;x.strokeStyle='#fff';x.stroke();x.lineWidth=5;x.strokeStyle='#000';x.stroke();x.restore()};
     drawPanel([[0,0],[W,0],[W,720],[0,1000]],panelHero,-off);drawPanel([[0,1130],[W,850],[W,H],[0,H]],panelBoss,off);}
-  title('من أجلِ عُمان!',380,130,'Kufi',21.5,t,{out:22.9});
+
 }
 
 // ---------- SCENE: power-up & final strike (23 – 27.5) ----------
@@ -312,3 +314,34 @@ window.onFort=function(t){if(SCENES!==ACTION_SCENES)return;const P=track([[12,'S
 
 const ACTION_SCENES=[[0,4.5,sDark,0],[4.5,9,sHero,0],[9,17,sBattle,0],[17,23,sBoss,0],[23,27.5,sPower,0],[27.5,33,t=>scene3(t-15.5),0.6],[33,40,t=>scene5(t-9),0.6]];
 SCENES=ACTION_SCENES;
+
+// ---------- dialogue: voice timing, portraits, speech boxes ----------
+let CURT=0;{const _r=window.render;window.render=t=>{CURT=t;_r(t)}}
+function talk(spk,t){for(const v of(window.VOICE||[]))if(v.spk===spk&&t>=v.start&&t<v.start+v.dur){return v.env[Math.min(v.env.length-1,Math.floor((t-v.start)*30))]||0}return 0}
+const SPEAKER={hero:{name:'حارسُ عُمان',acc:'#f2c14e',bg:['#14284d','#0a1224']},boss:{name:'سيّدُ الظلام',acc:'#ff3b5c',bg:['#3a0010','#0a0004']},minion:{name:'جنديُّ الظلام',acc:'#b06bff',bg:['#26093d','#08020f']},land:{name:'صوتُ الأرض',acc:'#4ee08a',bg:['#0d3b24','#04120a']}};
+function portrait(spk,t,tk,cx,cy,r){x.save();x.beginPath();x.arc(cx,cy,r,0,7);x.clip();const S=SPEAKER[spk];x.fillStyle=rgrad(cx,cy,r,[[0,S.bg[0]],[1,S.bg[1]]]);x.fillRect(cx-r,cy-r,2*r,2*r);
+  speedLines(cx,cy,t,0.12,S.acc,40);
+  if(spk==='land'){x.globalCompositeOperation='lighter';x.fillStyle=rgrad(cx,cy,r,[[0,`rgba(255,220,120,${0.4+tk*0.6})`],[1,'rgba(255,200,80,0)']]);x.fillRect(cx-r,cy-r,2*r,2*r);x.globalCompositeOperation='source-over';x.shadowColor='#ffd76a';x.shadowBlur=20+tk*40;emblem(cx,cy,1.25+tk*0.15,'#fff');}
+  else{const hero=spk==='hero';const sc=hero?6.2:spk==='boss'?5.4:5.8;const P={...POSES.STAND,x:0,y:0,s:sc,f:-1,head:-0.1};const J=fk(P);x.translate(cx-J.head[0]+(hero?-10:0),cy-J.head[1]+(hero?25:30));
+    if(hero)drawHero(J,t,{talk:tk,wind:8});else drawShadow(J,t,{talk:tk,horns:spk==='boss',seed:3})}
+  x.restore();x.save();x.lineWidth=8;x.strokeStyle=SPEAKER[spk].acc;x.shadowColor=SPEAKER[spk].acc;x.shadowBlur=20;x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();x.lineWidth=3;x.strokeStyle='#fff';x.shadowBlur=0;x.beginPath();x.arc(cx,cy,r-8,0,7);x.stroke();x.restore()}
+function wrapWords(words,maxW){const lines=[];let cur='';for(const w of words){const tr=cur?cur+' '+w:w;if(x.measureText(tr).width>maxW&&cur){lines.push(cur);cur=w}else cur=tr}if(cur)lines.push(cur);return lines}
+function dialogue(t){for(const v of(window.VOICE||[])){const a=v.start-0.18,b=v.start+v.dur+0.55;if(t<a||t>b)continue;
+  const S=SPEAKER[v.spk],tk=talk(v.spk,t);const pin=eOut(seg(t,a,a+0.22)),pout=seg(t,b-0.2,b);const k=pin*(1-pout);
+  x.save();x.globalAlpha=k;x.translate(0,(1-k)*60);
+  const bx=40,by=1545,bw=1000,bh=215;
+  // box
+  x.save();x.shadowColor='rgba(0,0,0,0.7)';x.shadowBlur=30;x.beginPath();x.moveTo(bx+30,by);x.lineTo(bx+bw,by);x.lineTo(bx+bw-30,by+bh);x.lineTo(bx,by+bh);x.closePath();
+  x.fillStyle=vgrad(by,by+bh,[[0,'rgba(8,10,24,0.92)'],[1,'rgba(20,10,30,0.92)']]);x.fill();x.shadowBlur=0;x.lineWidth=5;x.strokeStyle=S.acc;x.stroke();x.lineWidth=2;x.strokeStyle='rgba(255,255,255,0.5)';x.beginPath();x.moveTo(bx+44,by+12);x.lineTo(bx+bw-16,by+12);x.stroke();x.restore();
+  // name plate
+  x.save();x.font='42px Kufi';x.direction='rtl';x.textAlign='right';const nw=x.measureText(S.name).width+60;const nx=1040-260,ny=by-38;
+  x.beginPath();x.moveTo(nx-nw+20,ny);x.lineTo(nx+20,ny);x.lineTo(nx,ny+62);x.lineTo(nx-nw,ny+62);x.closePath();x.fillStyle=S.acc;x.fill();x.fillStyle='#120a04';x.fillText(S.name,nx-12,ny+46);x.restore();
+  // text (word-by-word reveal)
+  x.save();x.font='54px Cairo';x.direction='rtl';x.textAlign='right';x.textBaseline='middle';const words=v.text.split(' ');const shown=Math.max(1,Math.ceil(words.length*cl((t-v.start)/(v.dur*0.8))));
+  const lines=wrapWords(words,690);let cnt=0;const ly0=by+bh/2-(lines.length-1)*36;
+  lines.forEach((ln,i)=>{const ws=ln.split(' ');const vis=ws.slice(0,Math.max(0,shown-cnt));cnt+=ws.length;if(!vis.length)return;x.fillStyle='#fff';x.shadowColor=S.acc;x.shadowBlur=12;x.fillText(vis.join(' '),770,ly0+i*72)});x.restore();
+  // portrait with bounce while talking
+  portrait(v.spk,t,tk,915,by+70-tk*8,128);
+  // sound-wave bars
+  x.save();x.fillStyle=S.acc;for(let i=0;i<9;i++){const hgt=6+tk*40*Math.abs(Math.sin(t*25+i*1.7));x.fillRect(90+i*16,by+bh-30-hgt/2,9,hgt)}x.restore();
+  x.restore()}}

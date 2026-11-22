@@ -303,6 +303,6 @@ function fn2(fn,t,a){const saved=x;const ox=off.getContext('2d');ox.setTransform
   window.x_swap(ox);fn(t);window.x_swap(saved);x.globalAlpha=a;x.drawImage(off,0,0)}
 window.x_swap=(ctx)=>{x=ctx};
 window.render=render;
-document.write('<script src="action.js"><\/script>');
+document.write('<script src="voice.js"><\/script><script src="action.js"><\/script>');
 window.ready=Promise.all([document.fonts.load('120px Kufi'),document.fonts.load('80px Amiri'),document.fonts.load('50px Cairo')]).then(()=>{render(0);return true});
 </script></body></html>
