@@ -224,7 +224,7 @@ let T=0;
 // ---------- character state builders ----------
 function salem(o){return Object.assign({who:'s',x:700,y:FLOOR,s:1,armL:armP(POSE.down),armR:armP(POSE.down),face:{}},o)}
 function maryam(o){return Object.assign({who:'m',x:1250,y:FLOOR,s:0.95,armL:armP(POSE.down),armR:armP(POSE.down),face:{}},o)}
-const headPos=(c)=>[c.x,c.y-(c.sit?230:300)*(c.s||1)-88*(c.s||1)+(c.sit?70:0)];
+var headPos=(c)=>[c.x,c.y-(c.sit?230:300)*(c.s||1)-88*(c.s||1)+(c.sit?70:0)];
 function walkBob(t,on){return on?Math.abs(Math.sin(t*9))*-14:0}
 
 // ---------- scenes ----------
@@ -282,7 +282,7 @@ function sBalloon(t){const b=beatAt(t).id;livingSet(t);
   const hs=headPos(s);
   if(b==='blow')cam({x:900,y:520,z:lerp(1.0,1.35,ease(blow))});else if(b==='pop')cam(wide());else if(b==='m4')cam(cu(1200,headPos(m)[1]+90,1.9));else if(b==='s3')cam({x:700,y:700,z:1.8});else cam(wide());
   return{chars:showM?[s,m]:[s],cats:[cat],before:()=>{},after:()=>{
-    if(!popped&&br>0){const bx=hs[0]+0,by=hs[1]-br*0.95;x.strokeStyle='#888';x.lineWidth=3;ell(bx,by,br*0.88,br);x.fillStyle=rg(bx-br*0.3,by-br*0.4,br*1.3,[[0,'#ff8a9a'],[0.4,'#ff3d5a'],[1,'#b8102e']]);x.fill();x.lineWidth=6;x.strokeStyle=INK;x.stroke();x.fillStyle='rgba(255,255,255,0.5)';ell(bx-br*0.35,by-br*0.45,br*0.15,br*0.25,0.4);x.fill()}
+    if(!popped&&br>0){const bx=hs[0]+0,by=hs[1]+(window.BALLOON_OFF||0)-br*0.95;x.strokeStyle='#888';x.lineWidth=3;ell(bx,by,br*0.88,br);x.fillStyle=rg(bx-br*0.3,by-br*0.4,br*1.3,[[0,'#ff8a9a'],[0.4,'#ff3d5a'],[1,'#b8102e']]);x.fill();x.lineWidth=6;x.strokeStyle=INK;x.stroke();x.fillStyle='rgba(255,255,255,0.5)';ell(bx-br*0.35,by-br*0.45,br*0.15,br*0.25,0.4);x.fill()}
     if(inB('pop',t)){const q=seg(pp,0.12,0.4);if(q>0&&q<1){burst(hs[0]+60,hs[1]-200,260,'بوم!!','#ffd23a',eBack(cl(q*3)));const r=rng(3);for(let i=0;i<14;i++){const a=r()*7,d=q*700;x.save();x.translate(hs[0]+Math.cos(a)*d,hs[1]-200+Math.sin(a)*d+q*q*400);x.rotate(a+q*8);x.fillStyle='#e0263f';x.fillRect(-20,-8,40,16);x.restore()}}
       // flying cap
       const cq=seg(pp,0.12,0.5);if(cq>0&&cq<1){x.save();x.translate(lerp(hs[0],1180+22,cq),lerp(hs[1]-80,FLOOR-150,cq)-Math.sin(cq*Math.PI)*420);x.rotate(cq*12);x.beginPath();x.moveTo(-80,20);x.bezierCurveTo(-84,-70,84,-70,80,20);x.quadraticCurveTo(0,8,-80,20);fs('#fffdf6',6);x.restore()}}

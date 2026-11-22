@@ -12,7 +12,10 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else '.'
 os.makedirs(f'{OUT}/v', exist_ok=True)
 SR = 44100; TOTAL = 120.0; GAP = 0.32
 PROXY = os.environ.get('HTTPS_PROXY', '')
-VOICE = {'s': 'ar-OM-AbdullahNeural', 'm': 'ar-OM-AyshaNeural'}
+STYLE = sys.argv[2] if len(sys.argv) > 2 else 'cartoon'   # 'cartoon' or 'aot' (epic anime-drama cut)
+SUF = '' if STYLE == 'cartoon' else '_' + STYLE
+VOICE = {'s': 'ar-OM-AbdullahNeural', 'm': 'ar-OM-AyshaNeural', 'n': 'ar-SA-HamedNeural'}
+VFX = {'n': ',asetrate=44100*0.9,aresample=44100,aecho=0.8:0.75:120|260:0.4|0.25'}
 
 # scene, id, kind, speaker/dur, text, rate, pitch
 BEATS = [
@@ -61,6 +64,12 @@ BEATS = [
  ('end', 'm10', 'say', 'm', 'وبسبوسة بعد… تبي بيتزا!', '+5%', '+4Hz'),
  ('endcard', 'endcard', 'act', 5.5),
 ]
+if STYLE == 'aot':
+    BEATS[0] = ('title', 'title', 'act', 2.2)
+    BEATS.insert(1, ('title', 'n1', 'say', 'n', 'في ذلك اليوم… لم يكن أحدٌ يعلم… أن الحفلة… محكومٌ عليها بالفشل.', '-18%', '-8Hz'))
+    BEATS.insert(2, ('title', 'titlecard', 'act', 2.6))
+    BEATS[-1] = ('endcard', 'n2', 'say', 'n', 'وهكذا… سقطت الحفلة… قبل أن تبدأ.', '-15%', '-8Hz')
+    BEATS.append(('endcard', 'endcard', 'act', 4.5))
 OVERLAP = {'laughM': 0.9}  # laughM starts this many seconds before laughS ends
 
 def run(*a): subprocess.run(a, check=True, capture_output=True)
@@ -75,14 +84,16 @@ for b in BEATS:
     if b[2] != 'say': continue
     _, bid, _, spk, text, rate, pitch = b
     mp3, wav = f'{OUT}/v/{bid}.mp3', f'{OUT}/v/{bid}.wav'
+    if spk == 'n': mp3, wav = mp3.replace('.mp3', SUF + '.mp3'), wav.replace('.wav', SUF + '.wav')
     if not os.path.exists(wav):
         rate = f'{int(rate[:-1]) + 6:+d}%'
         cmd = ['edge-tts', '--voice', VOICE[spk], f'--rate={rate}', f'--pitch={pitch}', '--text', text, '--write-media', mp3]
         if PROXY: cmd[1:1] = ['--proxy', PROXY]
         run(*cmd)
         trim = 'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse'
-        run('ffmpeg', '-y', '-i', mp3, '-ac', '1', '-ar', str(SR), '-af', trim + ',highpass=f=70,acompressor=threshold=-18dB:ratio=3:attack=5:release=80,aecho=0.8:0.3:18:0.12', wav)
+        run('ffmpeg', '-y', '-i', mp3, '-ac', '1', '-ar', str(SR), '-af', trim + ',highpass=f=70,acompressor=threshold=-18dB:ratio=3:attack=5:release=80,aecho=0.8:0.3:18:0.12' + VFX.get(spk, ''), wav)
     clips[bid] = readwav(wav)
+    if spk == 'n': clips[bid] = clips[bid] * 1.25
 
 # ---- 2. timeline
 speech = sum(len(clips[b[1]]) / SR + GAP for b in BEATS if b[2] == 'say') - sum(OVERLAP.values())
@@ -101,8 +112,8 @@ for b in BEATS:
         cur = st + d + GAP
     tl.append(e)
 TOTAL = float(np.ceil(cur + 0.01)); print(f'action stretch x{k:.2f}, total {TOTAL:.2f}s')
-open(f'{OUT}/total.txt','w').write(str(TOTAL))
-open(f'{OUT}/timeline.js', 'w').write('window.TL=' + json.dumps(tl, ensure_ascii=False) + ';window.TOTAL=' + str(TOTAL) + ';\n')
+open(f'{OUT}/total{SUF}.txt','w').write(str(TOTAL))
+open(f'{OUT}/timeline{SUF}.js', 'w').write('window.TL=' + json.dumps(tl, ensure_ascii=False) + ';window.TOTAL=' + str(TOTAL) + ';\n')
 B = {e['id']: e for e in tl}
 N = int(TOTAL * SR); out = np.zeros(N); sfx = np.zeros(N); music = np.zeros(N); vo = np.zeros(N)
 rng = np.random.default_rng(3)
@@ -185,7 +196,7 @@ def zip_(s, a=0.3): put(sfx, s, glide(300, 1800, 0.25) * 0.5 * np.exp(-tt(0.25)*
 def balloon(s, e, a=0.15): d = e - s; put(sfx, s, lp(noise(d), 600) * (0.5+0.5*np.sin(2*np.pi*1.2*tt(d))), a)
 def fall(s, a=0.4): put(sfx, s, glide(1200, 200, 0.6) * np.exp(-tt(0.6)*1.5), a)
 
-jingle(at('title', 0.1), 0.35); jingle(at('title', 0.55), 0.3, (72, 76, 79, 84, 88))
+if STYLE == 'cartoon': jingle(at('title', 0.1), 0.35); jingle(at('title', 0.55), 0.3, (72, 76, 79, 84, 88))
 footsteps(at('enter'), at('enter', 1)); cough(at('choke', 0.2), 3, 0.6); whoosh(at('choke', 0.25), 0.3)
 boing(at('s1', 0, -0.25), 0.4); gulp(at('gulp', 0.35)); ding(at('wink', 0.3))
 balloon(at('blow'), at('pop', 0.1)); pop(at('pop', 0.12), 1.2); whoosh(at('pop', 0.14), 0.6, 0.5); fall(at('pop', 0.2)); thud(at('pop', 0.48)); boing(at('pop', 0.55), 0.3)
@@ -197,28 +208,73 @@ pour(at('pour', 0.25), at('pour', 0.95)); whoosh(at('taste', 0.2), 0.25); whistl
 meow(at('cat', 0.1), 0.35); whoosh(at('cat', 0.55), 0.4, 0.5); whoosh(at('crash', 0.0), 0.3, 0.6); crash(at('crash', 0.12)); fall(at('crash', 0.35), 0.3); thud(at('crash', 0.6)); put(sfx, at('crash', 0.75), tone(330, 1.6, 2, (1, 2.4, 3.9)), 0.4)
 crickets(at('silence'), at('silence', 1))
 dtmf(at('dial', 0.1)); ring(at('dial', 0.7), 0.12); click(at('hangup', 0.3)); put(sfx, at('hangup', 0.5), np.sin(2*np.pi*425*tt(0.25)), 0.08)
-meow(at('meow', 0.1), 0.6); jingle(at('endcard', 0.05), 0.35); jingle(at('endcard', 0.4), 0.3, (67, 72, 76, 79, 84))
+meow(at('meow', 0.1), 0.6)
+if STYLE == 'cartoon': jingle(at('endcard', 0.05), 0.35); jingle(at('endcard', 0.4), 0.3, (67, 72, 76, 79, 84))
 
-# ---- 4. music: playful pizzicato + marimba, C major 112 bpm
-beat = 60 / 112
-def pl(m, s, d=0.5, a=0.3):
-    f = 440*2**((m-69)/12); n = int(d*SR); p = max(2, int(SR/f)); buf = rng.uniform(-1, 1, p); y = np.empty(n)
-    for i in range(n): y[i] = buf[i % p]; buf[i % p] = 0.5*(buf[i % p] + buf[(i+1) % p])*0.993
-    put(music, s, y, a)
-def mar(m, s, a=0.2): put(music, s, tone(440*2**((m-69)/12), 0.5, 9, (1, 4)), a)
-prog = [(48, [60, 64, 67]), (45, [57, 60, 64]), (41, [57, 60, 65]), (43, [59, 62, 67])]
-melody = [72, 74, 76, 79, 76, 74, 72, 74, 76, 72, 69, 72, 74, 71, 67, 71]
-mute = [(at('pop', 0.1), at('m4')), (at('silence'), at('m8')), (at('look'), at('laughS'))]
-s = 0.0; k2 = 0
-while s < TOTAL:
-    if not any(a <= s < b for a, b in mute):
-        bass, ch = prog[(k2 // 8) % 4]
-        if k2 % 2 == 0: pl(bass - 12 + (7 if k2 % 4 == 2 else 0), s, 0.45, 0.32)
-        if k2 % 2 == 1:
-            for m in ch: mar(m, s, 0.06)
-        if k2 % 4 in (0, 3): mar(melody[(k2 // 2) % 16], s, 0.09)
-    s += beat / 2; k2 += 1
-music = lp(music, 5000)
+# ---- 4. music
+def cartoon_score():
+    global music
+    beat = 60 / 112
+    def pl(m, s, d=0.5, a=0.3):
+        f = 440*2**((m-69)/12); n = int(d*SR); p = max(2, int(SR/f)); buf = rng.uniform(-1, 1, p); y = np.empty(n)
+        for i in range(n): y[i] = buf[i % p]; buf[i % p] = 0.5*(buf[i % p] + buf[(i+1) % p])*0.993
+        put(music, s, y, a)
+    def mar(m, s, a=0.2): put(music, s, tone(440*2**((m-69)/12), 0.5, 9, (1, 4)), a)
+    prog = [(48, [60, 64, 67]), (45, [57, 60, 64]), (41, [57, 60, 65]), (43, [59, 62, 67])]
+    melody = [72, 74, 76, 79, 76, 74, 72, 74, 76, 72, 69, 72, 74, 71, 67, 71]
+    mute = [(at('pop', 0.1), at('m4')), (at('silence'), at('m8')), (at('look'), at('laughS'))]
+    s = 0.0; k2 = 0
+    while s < TOTAL:
+        if not any(a <= s < b for a, b in mute):
+            bass, ch = prog[(k2 // 8) % 4]
+            if k2 % 2 == 0: pl(bass - 12 + (7 if k2 % 4 == 2 else 0), s, 0.45, 0.32)
+            if k2 % 2 == 1:
+                for m in ch: mar(m, s, 0.06)
+            if k2 % 4 in (0, 3): mar(melody[(k2 // 2) % 16], s, 0.09)
+        s += beat / 2; k2 += 1
+    music = lp(music, 5000)
+
+def epic_score():
+    """Dark orchestral parody score: string ostinato, brass 'braams', choir, taiko."""
+    global music
+    def note(m): return 440*2**((m-69)/12)
+    def saw(f, d, det=(0, 0.004, -0.004)):
+        x = tt(d); return sum(sum(np.sin(2*np.pi*f*(1+dt)*k*x)/k for k in range(1, 16)) for dt in det)/len(det)
+    def strings(m, s, d, a=0.12):
+        x = tt(d); e = np.minimum(1, x/0.02)*np.exp(-x*6); put(music, s, lp(saw(note(m), d), 1800)*e, a)
+    def braam(s, a=0.5, root=38):
+        d = 2.6; x = tt(d); e = np.minimum(1, x/0.08)*np.exp(-x*0.9)
+        y = sum(lp(saw(note(m), d), 700+1200*np.exp(-x[0]*2)) for m in (root, root+7, root+12))
+        put(music, s, y*e/3, a); put(music, s, tone(45, 2.0, 1.5), a*0.8)
+    def choir(ch, s, d, a=0.08):
+        x = tt(d); e = np.minimum(1, x/0.8)*np.minimum(1, np.maximum(0, (d-x)/0.8))
+        y = sum(saw(note(m), d) for m in ch); y = bp(y, 500, 900)*0.8 + bp(y, 1000, 1400)*0.5
+        put(music, s, y*e, a)
+    def taiko(s, a=0.5): put(music, s, tone(55, 0.9, 5) + 0.3*lp(noise(0.9), 400)*np.exp(-tt(0.9)*12), a)
+    beat = 60/140; Dm = [50, 53, 57, 62]
+    # title: choir swell + braam
+    choir(Dm, 0.2, at('titlecard', 1)-0.2, 0.1); braam(at('titlecard'), 0.6); taiko(at('titlecard'), 0.7)
+    def ostinato(a0, a1, amp=0.1, pat=(38, 38, 41, 38, 43, 38, 41, 40)):
+        s0 = a0; k = 0
+        while s0 < a1: strings(pat[k % 8], s0, beat/2, amp); s0 += beat/2; k += 1
+    def drums(a0, a1, amp=0.35):
+        s0 = a0; k = 0
+        while s0 < a1:
+            if k % 8 in (0, 3, 6): taiko(s0, amp)
+            s0 += beat/2; k += 1
+    ostinato(at('enter'), at('blow'), 0.06); choir([50, 57, 62], at('m1'), at('blow')-at('m1'), 0.03)
+    for b, r in (('s1', 38), ('gulp', 36), ('m7', 39), ('m8', 38)): braam(at(b, 0, -0.05), 0.55, r)
+    ostinato(at('blow'), at('pop', 0.12), 0.08); choir([50, 53, 57, 62, 65], at('blow'), at('pop', 0.12)-at('blow'), 0.06)
+    braam(at('pop', 0.12), 0.7, 36)
+    ostinato(at('mix'), at('m6'), 0.07, (45, 45, 48, 45, 50, 45, 48, 47)); drums(at('smoke'), at('reveal'), 0.3); braam(at('reveal', 0.55), 0.45, 40)
+    ostinato(at('m6'), at('taste', 0.5), 0.05); choir([52, 55, 59, 64], at('taste'), 2.5, 0.07)
+    ostinato(at('cat'), at('silence'), 0.1, (38, 38, 41, 43, 45, 43, 41, 40)); drums(at('cat', 0.3), at('silence'), 0.45); choir([50, 53, 57, 62, 69], at('cat'), at('silence')-at('cat'), 0.09); braam(at('crash', 0.12), 0.8, 34)
+    ostinato(at('dial'), at('look'), 0.04, (50, 50, 53, 50, 55, 50, 53, 52))
+    choir([50, 54, 57, 62, 66], at('laughS'), at('meow')-at('laughS'), 0.09); braam(at('laughS'), 0.45, 38+4)
+    choir([50, 53, 57, 62], at('n2'), at('endcard', 1)-at('n2'), 0.1); braam(at('endcard'), 0.7, 38); taiko(at('endcard'), 0.8)
+    music = lp(music, 6000)
+
+cartoon_score() if STYLE == 'cartoon' else epic_score()
 
 # ---- 5. mix with ducking
 env = lfilter([1 - np.exp(-1/(0.12*SR))], [1, -np.exp(-1/(0.12*SR))], np.abs(vo))
@@ -227,6 +283,6 @@ mix = vo * 1.0 + sfx * 0.55 + music * 0.5 * duck
 mix *= np.interp(np.arange(N)/SR, [0, 0.2, TOTAL-1.0, TOTAL], [0, 1, 1, 0])
 mix = np.tanh(mix / np.abs(mix).max() * 1.3) / np.tanh(1.3) * 0.95
 st = np.stack([mix, np.roll(mix, 120)*0.15 + mix*0.85], 1)
-with wave.open(f'{OUT}/episode_audio.wav', 'wb') as w:
+with wave.open(f'{OUT}/episode_audio{SUF}.wav', 'wb') as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((st * 32767).astype(np.int16).tobytes())
 print('ok')
